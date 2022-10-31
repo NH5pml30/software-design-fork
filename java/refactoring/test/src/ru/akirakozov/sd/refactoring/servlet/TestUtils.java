@@ -16,7 +16,11 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -140,10 +144,14 @@ public class TestUtils {
         assertResponseOK(responseData.statusRef.getStatus());
     }
 
-    protected static String formatProducts(Map<String, Long> products) {
-        return products.entrySet().stream()
+    protected static String formatProducts(Stream<Map.Entry<String, Long>> products) {
+        return products
                 .map(entry -> String.format("%s\t%d</br>", entry.getKey(), entry.getValue()) + System.lineSeparator())
                 .collect(Collectors.joining());
+    }
+
+    protected static String formatProducts(Map<String, Long> products) {
+        return formatProducts(products.entrySet().stream());
     }
 
     protected static String wrapTags(List<String> tags, String content, String sep) {
@@ -179,5 +187,46 @@ public class TestUtils {
                 products.entrySet().stream()
                         .map(entry -> String.format("(\"%s\", %d)", entry.getKey(), entry.getValue()))
                         .collect(Collectors.joining(", "));
+    }
+
+    protected void testAdd(AddProductServlet servlet, String name, long price) throws IOException {
+        servlet.doGet(mockRequestNamePrice(name, price), mockResponse());
+        assertResponseOK();
+        Assert.assertEquals("OK" + System.lineSeparator(), responseData.getText());
+    }
+
+    protected String testGetStub(GetProductsServlet servlet) throws IOException {
+        servlet.doGet(mockRequest(Map.of()), mockResponse());
+        assertResponseOK();
+        return responseData.getText();
+    }
+
+    protected void testGetSingle(GetProductsServlet servlet, Map<String, Long> prods) throws IOException {
+        Assert.assertTrue(prods.size() <= 1);
+        Assert.assertEquals(wrapHtml(formatProducts(prods)), testGetStub(servlet));
+    }
+
+    protected void testGetTwo(GetProductsServlet servlet, Map<String, Long> prods) throws IOException {
+        Assert.assertTrue(prods.size() <= 2);
+        if (prods.size() <= 1) {
+            testGetSingle(servlet, prods);
+        } else {
+            var entries = new ArrayList<>(prods.entrySet());
+            var revEntries = new ArrayList<>(entries);
+            Collections.reverse(revEntries);
+            assertThat(testGetStub(servlet),
+                    anyOf(
+                            is(wrapHtml(formatProducts(entries.stream()))),
+                            is(wrapHtml(formatProducts(revEntries.stream())))
+                    ));
+        }
+    }
+
+    void testQuery(QueryServlet servlet, Map<String, Long> prods) throws IOException {
+        for (var query : QUERIES.entrySet()) {
+            servlet.doGet(mockRequestCommand(query.getKey()), mockResponse());
+            assertResponseOK();
+            Assert.assertEquals(wrapHtml(query.getValue().apply(prods)), responseData.getText());
+        }
     }
 }

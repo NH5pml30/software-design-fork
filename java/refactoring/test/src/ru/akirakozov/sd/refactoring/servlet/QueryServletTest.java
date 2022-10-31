@@ -5,17 +5,11 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 
 public class QueryServletTest extends TestUtils {
     void testProds(QueryServlet servlet, Map<String, Long> prods) throws Exception {
         runSQLUpdates(List.of(DROP_SQL, INIT_SQL, getAddSQLUpdate(prods)));
-        for (var query : QUERIES.entrySet()) {
-            servlet.doGet(mockRequestCommand(query.getKey()), mockResponse());
-            assertResponseOK();
-            Assert.assertEquals(wrapHtml(query.getValue().apply(prods)), responseData.getText());
-        }
+        testQuery(servlet, prods);
     }
 
     @Test
