@@ -5,18 +5,14 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class AddProductServletTest extends TestUtils<AddProductServlet> {
+public class AddProductServletTest extends TestUtils {
     private static final String PRODUCT_NAME = "product name";
-
-    public AddProductServletTest() {
-        super(AddProductServlet::new);
-    }
 
     @Test
     public void simpleOperability() throws IOException {
-        var response = mockResponse();
-        servlet.doGet(mockRequestNamePrice(PRODUCT_NAME, 200), response);
-        assertResponseOK(response);
-        Assert.assertEquals("OK", writer.toString());
+        var servlet = new AddProductServlet();
+        servlet.doGet(mockRequestNamePrice(PRODUCT_NAME, 200), mockResponse());
+        assertResponseOK();
+        Assert.assertEquals("OK" + System.lineSeparator(), responseData.getText());
     }
 }
