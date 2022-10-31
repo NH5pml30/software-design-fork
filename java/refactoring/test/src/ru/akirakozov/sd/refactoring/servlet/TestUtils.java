@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.mockito.stubbing.Answer;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -14,14 +13,43 @@ import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class TestUtils {
+    protected final static String DROP_SQL = "drop table if exists product";
+    protected final static String INIT_SQL =
+            "create table if not exists product (" +
+                    " id integer primary key autoincrement not null," +
+                    " name text not null," +
+                    " price int not null" +
+                    ")";
+    protected final static String INSERT_SQL_STUB = "insert into product (name, price) values ";
+    protected final static String SQL_URL = "jdbc:sqlite:test.db";
+
+    protected static <K, V> Map<K, V> optionalToMap(Optional<Map.Entry<K, V>> opt) {
+        return opt.map(e -> Map.of(e.getKey(), e.getValue())).orElse(Map.of());
+    }
+
+    protected final static String SEP = System.lineSeparator();
+
+    protected final static Map<String, Function<Map<String, Long>, String>> QUERIES = Map.of(
+            "min", prods -> addHeader("Product with min price: ",
+                    SEP + formatProducts(
+                            optionalToMap(prods.entrySet().stream().min(Map.Entry.comparingByValue()))
+                    ), ""),
+            "max", prods -> addHeader("Product with max price: ",
+                    SEP + formatProducts(
+                            optionalToMap(prods.entrySet().stream().max(Map.Entry.comparingByValue()))
+                    ), ""),
+            "sum", prods -> "Summary price: " + SEP + prods.values().stream().reduce(0L, Long::sum) + SEP,
+            "count", prods -> "Number of products: " + SEP + prods.size() + SEP
+    );
+
     protected static class ResponseData {
         static class StatusRef {
             int status;
@@ -52,27 +80,19 @@ public class TestUtils {
 
     ResponseData responseData = new ResponseData();
 
-    protected final String DROP_SQL = "drop table if exists product";
-    protected final String INIT_SQL =
-            "create table if not exists product (" +
-            " id integer primary key autoincrement not null," +
-            " name text not null," +
-            " price int not null" +
-                    ")";
-    protected final String SQL_URL = "jdbc:sqlite:test.db";
-
-    void initSQL() throws Exception {
+    protected void runSQLUpdates(List<String> updates) throws Exception {
         try (Connection c = DriverManager.getConnection(SQL_URL);
              Statement stmt = c.createStatement()) {
-            stmt.executeUpdate(DROP_SQL);
-            stmt.executeUpdate(INIT_SQL);
+            for (var update : updates) {
+                stmt.executeUpdate(update);
+            }
         }
     }
 
     @Before
     public void setUp() throws Exception {
         responseData.init();
-        initSQL();
+        runSQLUpdates(List.of(DROP_SQL, INIT_SQL));
     }
 
     protected HttpServletRequest mockRequest(Map<String, String> content) {
@@ -104,6 +124,7 @@ public class TestUtils {
     }
 
     protected HttpServletResponse mockResponse() throws IOException {
+        responseData.init();
         return mockResponse(responseData.responseWriter, responseData.statusRef);
     }
 
@@ -119,14 +140,44 @@ public class TestUtils {
         assertResponseOK(responseData.statusRef.getStatus());
     }
 
-    protected static StringBuilder sbNewLine(StringBuilder builder) {
-        return builder.append(System.lineSeparator());
+    protected static String formatProducts(Map<String, Long> products) {
+        return products.entrySet().stream()
+                .map(entry -> String.format("%s\t%d</br>", entry.getKey(), entry.getValue()) + System.lineSeparator())
+                .collect(Collectors.joining());
     }
 
-    protected String getExpectedGetText(Map<String, Long> products) {
-        StringBuilder builder = sbNewLine(new StringBuilder("<html><body>"));
-        products.forEach((name, price) ->
-                sbNewLine(builder.append(name).append("\t").append(price).append("</br>")));
-        return sbNewLine(builder.append("</body></html>")).toString();
+    protected static String wrapTags(List<String> tags, String content, String sep) {
+        var start = tags.stream().map(s -> "<" + s + ">").collect(Collectors.joining());
+        var revTags = new ArrayList<>(tags);
+        Collections.reverse(revTags);
+        var end = revTags.stream().map(s -> "</" + s + ">").collect(Collectors.joining());
+        return start + sep + content + end + sep;
+    }
+
+    protected static String wrapTags(List<String> tags, String content) {
+        return wrapTags(tags, content, SEP);
+    }
+
+    protected static String wrapHtml(String content) {
+        return wrapTags(List.of("html", "body"), content);
+    }
+
+    protected static String addHeader(String header, String content, String sep) {
+        return wrapTags(List.of("h1"), header, sep) + content + sep;
+    }
+
+    protected String addHeader(String header, String content) {
+        return addHeader(header, content, SEP);
+    }
+
+    protected String getAddSQLUpdate(Map<String, Long> products) {
+        if (products.isEmpty()) {
+            return "";
+        }
+
+        return INSERT_SQL_STUB +
+                products.entrySet().stream()
+                        .map(entry -> String.format("(\"%s\", %d)", entry.getKey(), entry.getValue()))
+                        .collect(Collectors.joining(", "));
     }
 }
