@@ -35,12 +35,21 @@ public class HtmlGeneratorTest {
 
     @Test
     public void appendTest() {
-        checkString(gen -> gen.append(STRING_TO_APPEND), STRING_TO_APPEND);
+        checkString(gen -> gen.append(STRING_TO_APPEND).appendBr(), STRING_TO_APPEND + "</br>");
     }
 
     @Test
     public void closeLastTagTest() {
         checkString(gen -> gen.beginTag(THE_TAG_1).closeLastTag(), String.format("<%s></%s>", THE_TAG_1, THE_TAG_1));
+    }
+
+    @Test
+    public void closeAllTagsTest() {
+        checkString(gen -> gen.beginTag(THE_TAG_1).beginTag(THE_TAG_2).closeAllTags(),
+                String.format("<%s><%s></%s></%s>", THE_TAG_1, THE_TAG_2, THE_TAG_2, THE_TAG_1));
+        checkString(gen -> gen.beginTag(THE_TAG_1).beginTag(THE_TAG_2).close(),
+                String.format("<%s><%s></%s></%s>%s", THE_TAG_1, THE_TAG_2, THE_TAG_2, THE_TAG_1,
+                        System.lineSeparator()));
     }
 
     @Test
