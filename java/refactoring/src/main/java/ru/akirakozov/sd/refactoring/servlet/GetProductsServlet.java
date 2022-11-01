@@ -15,21 +15,11 @@ public class GetProductsServlet extends ProductServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            try (Connection c = DriverManager.getConnection("jdbc:sqlite:test.db");
-                 var htmlGenerator = createHtmlGenerator(response)) {
-                Statement stmt = c.createStatement();
-                ResultSet rs = stmt.executeQuery("SELECT * FROM PRODUCT");
-
-                formatProducts(htmlGenerator, rs);
-
-                rs.close();
-                stmt.close();
+        singleStatementResponse(response, (htmlGenerator, stmt) -> {
+            try (ResultSet rs = stmt.executeQuery("SELECT * FROM PRODUCT")) {
+                forEachResult(rs, formatProduct(htmlGenerator));
             }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        });
 
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);

@@ -17,17 +17,11 @@ public class AddProductServlet extends ProductServlet {
         String name = request.getParameter("name");
         long price = Long.parseLong(request.getParameter("price"));
 
-        try {
-            try (Connection c = DriverManager.getConnection("jdbc:sqlite:test.db")) {
-                String sql = "INSERT INTO PRODUCT " +
-                        "(NAME, PRICE) VALUES (\"" + name + "\"," + price + ")";
-                Statement stmt = c.createStatement();
-                stmt.executeUpdate(sql);
-                stmt.close();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        withStatementUnchecked(stmt -> {
+            String sql = "INSERT INTO PRODUCT " +
+                    "(NAME, PRICE) VALUES (\"" + name + "\"," + price + ")";
+            stmt.executeUpdate(sql);
+        });
 
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
