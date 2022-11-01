@@ -1,6 +1,5 @@
 package ru.akirakozov.sd.refactoring.servlet;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;

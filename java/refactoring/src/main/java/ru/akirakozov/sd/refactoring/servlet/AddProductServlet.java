@@ -3,9 +3,6 @@ package ru.akirakozov.sd.refactoring.servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
 
 /**
  * @author akirakozov
@@ -17,11 +14,10 @@ public class AddProductServlet extends ProductServlet {
         String name = request.getParameter("name");
         long price = Long.parseLong(request.getParameter("price"));
 
-        withStatementUnchecked(stmt -> {
-            String sql = "INSERT INTO PRODUCT " +
-                    "(NAME, PRICE) VALUES (\"" + name + "\"," + price + ")";
-            stmt.executeUpdate(sql);
-        });
+        withStatementUnchecked(stmt ->
+            stmt.executeUpdate(String.format("INSERT INTO %s (%s, %s) VALUES (\"%s\", %d)",
+                    PRODUCT_TABLE, PRODUCT_NAME_ATTR, PRODUCT_PRICE_ATTR, name, price))
+        );
 
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);

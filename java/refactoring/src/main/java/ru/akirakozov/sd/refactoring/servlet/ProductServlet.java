@@ -13,11 +13,12 @@ import java.sql.Statement;
 
 public abstract class ProductServlet extends HttpServlet {
     static final String SQL_URL = "jdbc:sqlite:test.db";
-    private static final String PRODUCT_NAME_ATTR = "name";
-    private static final String PRODUCT_PRICE_ATTR = "price";
+    protected static final String PRODUCT_NAME_ATTR = "name";
+    protected static final String PRODUCT_PRICE_ATTR = "price";
+    protected static final String PRODUCT_TABLE = "product";
 
-    protected interface SingleStatementResponse {
-        void accept(HtmlGenerator gen, Statement stmt) throws SQLException;
+    protected interface SingleQueryResponse {
+        void accept(HtmlGenerator gen, ResultSet rs) throws SQLException;
     }
 
     ProductServlet(String dbUrl) {
@@ -65,10 +66,10 @@ public abstract class ProductServlet extends HttpServlet {
         }
     }
 
-    protected void singleStatementResponse(HttpServletResponse response, SingleStatementResponse action)
+    protected void singleQueryResponse(HttpServletResponse response, String query, SingleQueryResponse action)
             throws IOException {
         var gen = createHtmlGenerator(response);
-        withStatementUnchecked(s -> action.accept(gen, s));
+        withStatementUnchecked(s -> sqlAccessor.withQuery(s, query, rs -> action.accept(gen, rs)));
         // don't need to close tags if exception is thrown
         gen.close();
     }

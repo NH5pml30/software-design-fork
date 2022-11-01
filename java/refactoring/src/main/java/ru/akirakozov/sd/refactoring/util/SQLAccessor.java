@@ -1,9 +1,6 @@
 package ru.akirakozov.sd.refactoring.util;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class SQLAccessor {
     public interface SQLAction<T> {
@@ -28,6 +25,12 @@ public class SQLAccessor {
 
     public void withStatement(SQLAction<Statement> action) throws SQLException {
         withConnection(c -> withStatement(c, action));
+    }
+
+    public void withQuery(Statement stmt, String query, SQLAction<ResultSet> action) throws SQLException {
+        try (var rs = stmt.executeQuery(query)) {
+            action.accept(rs);
+        }
     }
 
     private final String dbUrl;
