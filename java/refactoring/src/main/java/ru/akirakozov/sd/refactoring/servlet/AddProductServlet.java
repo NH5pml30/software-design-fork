@@ -1,5 +1,7 @@
 package ru.akirakozov.sd.refactoring.servlet;
 
+import ru.akirakozov.sd.refactoring.util.SQLAccessor;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -8,6 +10,9 @@ import java.io.IOException;
  * @author akirakozov
  */
 public class AddProductServlet extends ProductServlet {
+    public AddProductServlet(SQLAccessor sqlAccessor) {
+        super(sqlAccessor);
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

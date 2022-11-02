@@ -1,8 +1,10 @@
 package ru.akirakozov.sd.refactoring.servlet;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.mockito.stubbing.Answer;
+import ru.akirakozov.sd.refactoring.util.SQLAccessor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,13 +35,11 @@ public class TestUtils {
                     " price int not null" +
                     ")";
     protected final static String INSERT_SQL_STUB = "insert into product (name, price) values ";
-    protected final static String SQL_URL = "jdbc:sqlite:test.db";
+    protected final static String SEP = System.lineSeparator();
 
     protected static <K, V> Map<K, V> optionalToMap(Optional<Map.Entry<K, V>> opt) {
         return opt.map(e -> Map.of(e.getKey(), e.getValue())).orElse(Map.of());
     }
-
-    protected final static String SEP = System.lineSeparator();
 
     protected final static Map<String, Function<Map<String, Long>, String>> QUERIES = Map.of(
             "min", prods -> addHeader("Product with min price: ",
@@ -53,6 +53,13 @@ public class TestUtils {
             "sum", prods -> "Summary price: " + SEP + prods.values().stream().reduce(0L, Long::sum) + SEP,
             "count", prods -> "Number of products: " + SEP + prods.size() + SEP
     );
+
+    private static String generateDbUrl() {
+        return "jdbc:sqlite:test-tmp.db";
+    }
+
+    protected String sqlUrl = generateDbUrl();
+    protected SQLAccessor sqlAccessor = new SQLAccessor(sqlUrl);
 
     protected static class ResponseData {
         static class StatusRef {
@@ -85,7 +92,7 @@ public class TestUtils {
     ResponseData responseData = new ResponseData();
 
     protected void runSQLUpdates(List<String> updates) throws Exception {
-        try (Connection c = DriverManager.getConnection(SQL_URL);
+        try (Connection c = DriverManager.getConnection(sqlUrl);
              Statement stmt = c.createStatement()) {
             for (var update : updates) {
                 stmt.executeUpdate(update);

@@ -13,12 +13,12 @@ public class GetProductsServletTest extends TestUtils {
 
     @Test
     public void simpleOperability() throws Exception {
-        testProds(new GetProductsServlet(), Map.of());
+        testProds(new GetProductsServlet(sqlAccessor), Map.of());
     }
 
     @Test
     public void nonEmptyTest() throws Exception {
         var prods = Map.of("product name", 300L);
-        testProds(new GetProductsServlet(), prods);
+        testProds(new GetProductsServlet(sqlAccessor), prods);
     }
 }

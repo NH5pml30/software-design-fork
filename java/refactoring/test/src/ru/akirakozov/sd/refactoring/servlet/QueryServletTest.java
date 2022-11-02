@@ -13,13 +13,13 @@ public class QueryServletTest extends TestUtils {
 
     @Test
     public void simpleOperability() throws Exception {
-        var servlet = new QueryServlet();
+        var servlet = new QueryServlet(sqlAccessor);
         testProds(servlet, Map.of());
     }
 
     @Test
     public void nonEmptyTest() throws Exception {
-        var servlet = new QueryServlet();
+        var servlet = new QueryServlet(sqlAccessor);
         testProds(servlet, Map.of("product1", 200L, "product2", 300L, "product3", 100L));
     }
 }

@@ -1,5 +1,7 @@
 package ru.akirakozov.sd.refactoring.servlet;
 
+import ru.akirakozov.sd.refactoring.util.SQLAccessor;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -9,6 +11,10 @@ import java.util.Map;
  * @author akirakozov
  */
 public class QueryServlet extends ProductServlet {
+    public QueryServlet(SQLAccessor sqlAccessor) {
+        super(sqlAccessor);
+    }
+
     private static class QueryAction {
         String query;
         SingleQueryResponse action;

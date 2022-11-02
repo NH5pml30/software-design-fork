@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public abstract class ProductServlet extends HttpServlet {
-    static final String SQL_URL = "jdbc:sqlite:test.db";
     protected static final String PRODUCT_NAME_ATTR = "name";
     protected static final String PRODUCT_PRICE_ATTR = "price";
     protected static final String PRODUCT_TABLE = "product";
@@ -21,12 +20,8 @@ public abstract class ProductServlet extends HttpServlet {
         void accept(HtmlGenerator gen, ResultSet rs) throws SQLException;
     }
 
-    ProductServlet(String dbUrl) {
-        this.sqlAccessor = new SQLAccessor(dbUrl);
-    }
-
-    ProductServlet() {
-        this(SQL_URL);
+    ProductServlet(SQLAccessor sqlAccessor) {
+        this.sqlAccessor = sqlAccessor;
     }
 
     protected HtmlGenerator createHtmlGenerator(HttpServletResponse response) throws IOException {
