@@ -93,7 +93,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>ru.akirakozov.sd.app.Application</mainClass>
+                            <mainClass>ru.akirakozov.sd.app.exchange.Application</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

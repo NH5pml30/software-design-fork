@@ -1,4 +1,4 @@
-package ru.akirakozov.sd.app;
+package ru.akirakozov.sd.app.exchange;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
